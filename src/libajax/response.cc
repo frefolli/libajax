@@ -20,7 +20,7 @@ std::map<std::string, std::string> Response::getHeaders() {
 
 std::string Response::toString() {
     std::ostringstream out ("");
-    out << "Response(" << status << ", \"" << data << "\", ";
+    out << "Response(" << status << ", \"" << /*data <<*/ "\", ";
     
     out << "{";
     bool notFirst = false;

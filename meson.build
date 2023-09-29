@@ -1,7 +1,7 @@
 project('libajax', 'cpp', version: 'master')
 
 include = include_directories('include')
-libcurl_dep = dependency('libcurl')
+libcurl_dep = dependency('libcurl', version : '>=8.3.0')
 
 libajax = library('libajax', [
     'src/libajax/method.cc',
