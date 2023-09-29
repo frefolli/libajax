@@ -8,8 +8,8 @@
 class Ajax {
     public:
         static Response perform(Request request);
-        static size_t Ajax::handleResponseHeaders(char *buffer, size_t size, size_t nitems, void *userdata);
-        static size_t Ajax::handleResponseData(char *ptr, size_t size, size_t nmemb, void *userdata);{
+        static size_t handleResponseHeaders(char *buffer, size_t size, size_t nitems, void *userdata);
+        static size_t handleResponseData(char *ptr, size_t size, size_t nmemb, void *userdata);
 };
 
 #endif

@@ -2,6 +2,7 @@
 #include <curl/curl.h>
 #include <sstream>
 #include <stdexcept>
+#include <iostream>
 
 std::string makeHeader(std::string name, std::string value) {
     std::ostringstream out ("");
@@ -15,20 +16,10 @@ void inline rescue(CURLcode code) {
     }
 }
 
-size_t Ajax::handleResponseHeaders(char *buffer, size_t size, size_t nitems, void *destination) {
-    std::map<std::string, std::string>* headers = (std::map<std::string, std::string>*) destination;
-    size_t nread = 0;
-    size_t index = 0;
-    while (nread != nitems && index != size) {
-       
-    }
-    return index;
-}
-
 size_t Ajax::handleResponseData(char *ptr, size_t size, size_t nmemb, void *destination) {
     std::string* data = (std::string*) destination;
     data->append(ptr, size * nmemb);
-    return size * nmmemb;
+    return size * nmemb;
 }
 
 Response Ajax::perform(Request request) {
@@ -36,7 +27,7 @@ Response Ajax::perform(Request request) {
     
     // set URL
     rescue(curl_easy_setopt(handle, CURLOPT_URL, request.getUrl().c_str()));
-    rescue(curl_easy_setopt(handle, CURLOPT_VERBOSE, 1L));
+    // rescue(curl_easy_setopt(handle, CURLOPT_VERBOSE, 1L));
 
     // set METHOD
     rescue(curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, toString(request.getMethod()).c_str()));
@@ -58,16 +49,11 @@ Response Ajax::perform(Request request) {
         rescue(curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers));
         rescue(curl_easy_setopt(handle, CURLOPT_HEADEROPT, CURLHEADER_SEPARATE));
     }
-    
-    // get HEADERS
-    std::map<std::string, std::string> responseHeaders;
-    rescue(curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, &Ajax::handleResponseHeaders));
-    rescue(curl_easy_setopt(CURL *handle, CURLOPT_HEADERDATA, (void*) &responseHeaders));
-
+   
     // get DATA
     std::string responseData;
     rescue(curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, &Ajax::handleResponseData));
-    rescue(curl_easy_setopt(CURL *handle, CURLOPT_WRITEDATA, (void*) &responseData));
+    rescue(curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void*) &responseData));
 
     // perform REQUEST
     rescue(curl_easy_perform(handle));
@@ -75,10 +61,18 @@ Response Ajax::perform(Request request) {
     // get STATUS
     Status responseStatus;
     rescue(curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &responseStatus));
-
+ 
+    // get HEADERS
+    std::map<std::string, std::string> responseHeaders;
+    struct curl_header *prev = NULL;
+    struct curl_header *h;
+    while((h = curl_easy_nextheader(handle, CURLH_HEADER, 0, prev))) {
+       responseHeaders[h->name] = h->value;
+       prev = h;
+    }
+    
     curl_slist_free_all(headers);
     curl_easy_cleanup(handle);
 
-    // deliver an empty response for now, TODO
     return Response(responseStatus, responseData, responseHeaders);
 }
